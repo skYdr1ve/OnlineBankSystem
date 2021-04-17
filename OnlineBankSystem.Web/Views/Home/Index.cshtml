@@ -1,0 +1,122 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container" id="page-content">
+    <div class="padding">
+        <div class="row d-flex justify-content-center">
+            <div class="col-sm-12">
+                <!-- Draggable default card start -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Accounts</h5>
+                    </div>
+                    <div class="card-block">
+                        <div class="row" id="sortable">
+                            @foreach (var account in Model.Accounts)
+                            {
+                                <div class="col-md-3">
+                                    <a class="card card-sub card-link" style="cursor: pointer" asp-controller="Account" asp-action="Details" asp-route-id="@account.Id">
+                                        <div class="card-block">
+                                            <h4 class="card-title">@account.Name</h4>
+                                            <div class="balance-sum-block">
+                                                <div class="sum" style="font-size: 28px;">
+                                                    @account.Balance
+                                                </div>
+                                                <div class="currency">@account.Currency.Code</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent border-success text-center">
+                                            @if (account.Cards.Count == 1)
+                                            {
+                                                <span class="card-number">
+                                                    <span>************@account.Cards.First().Last4Digits</span>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                        <span class="card-number">
+                                            <span>@account.Cards.Count Card(s)</span>
+                                        </span>
+                                            }
+                                        </div>
+                                    </a>
+                                </div>
+                            }
+
+                            <div class="col-md-3">
+                                <a class="card-sub" style="cursor: pointer" asp-controller="Account" asp-action="Create">
+                                    <div class="card-block empty-card">
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- Draggable default card start -->
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <h3>Last 10 transactions</h3>
+        @if (Model.Transactions.Any())
+        {
+            <table class="table table-hover table-bordered auto-datatable">
+                <thead>
+                    <tr>
+                        <th data-priority="6">Status</th>
+                        <th data-priority="2">Date</th>
+                        <th data-priority="4">Details</th>
+                        <th data-priority="3">From</th>
+                        <th data-priority="5">To</th>
+                        <th data-priority="1">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in Model.Transactions)
+                    {
+                        <tr>
+                            <td>
+                                @if (@transaction.StatusId == 1)
+                                {
+                                    <span class="text-green">Success</span>
+                                }
+                                else
+                                {
+                                    <span class="text-red">Failed</span>
+                                }
+                            </td>
+                            <td class="auto-format-date">@transaction.Date.ToString("O")</td>
+                            <td class="word-break-all">@transaction.Description</td>
+                            <td>@transaction.FromAccount.Number</td>
+                            <td>@transaction.Destination</td>
+                            <td>
+                                @if (!transaction.Income)
+                                {
+                                    <span class="text-red">@transaction.Amount BYN</span>
+                                }
+                                else
+                                {
+                                    <span class="text-green">+@transaction.Amount BYN</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <!--
+            <a asp-area="MoneyTransfers" asp-controller="Home" asp-action="All" class="btn btn-outline-primary">View all transactions</a>
+            -->
+        }
+        else
+        {
+            <h5 class="text-muted">No transactions have been made yet.</h5>}
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#sortable").sortable();
+        $("#sortable").disableSelection();
+    });
+</script>

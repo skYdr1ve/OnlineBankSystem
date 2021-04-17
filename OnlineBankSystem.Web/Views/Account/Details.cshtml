@@ -1,0 +1,590 @@
+﻿@model AccountViewModel
+@{ ViewData["Title"] = Model.Account.Number; }
+
+<div class="card mb-3">
+    <div class="card-body hover-parent">
+        <h2 class="card-title text-center">
+            <span id="accountName">@Model.Account.Name</span>
+            <i class="fas fa-pen fa-xs cursor-pointer hover-visible text-muted text-primary-hover"
+               data-toggle="modal" data-target="#editModal">
+            </i>
+        </h2>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 col-lg-5">
+                <h5 class="text-center">Account details</h5>
+                <div class="d-flex flex-row justify-content-center">
+                    <p>Name</p>
+                    <p class="ml-3">@Model.FullName</p>
+                </div>
+                <div class="d-flex flex-row justify-content-center">
+                    <p>Current balance</p>
+                    <p class="text-green ml-3">@Model.Account.Balance @Model.Account.Currency.Code</p>
+                </div>
+                <div class="d-flex flex-row justify-content-center">
+                    <p>Account number</p>
+                    <p class="ml-3">@Model.Account.Number</p>
+                </div>
+                <div class="d-flex flex-row justify-content-center">
+                    <p>Date of creation</p>
+                    <p class="ml-3 auto-format-date">@Model.Account.CreatedOn.Date.ToString("d")</p>
+                </div>
+                <div class="d-flex flex-row justify-content-center">
+                    <p>Total transfers</p>
+                    <p class="ml-3">@Model.MoneyTransfersCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<ul class="nav nav-tabs justify-content-center" data-tabs="tabs">
+    <li class="nav-item active"><a class="nav-link" data-toggle="tab" href="#transactions">Transactions</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#cards">Cards</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#actions">Actions</a></li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane active" id="transactions">
+        @if (!Model.Transactions.Any())
+        {
+            <h5 class="text-center text-muted">No money transfers have been made yet</h5> }
+        else
+        {
+            <h3 class="text-center">Last transactions</h3>
+            <table class="table table-hover table-bordered auto-datatable">
+                <thead>
+                <tr>
+                    <th data-priority="6">Status</th>
+                    <th data-priority="2">Date</th>
+                    <th data-priority="4">Details</th>
+                    <th data-priority="3">From</th>
+                    <th data-priority="5">To</th>
+                    <th data-priority="1">Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var transaction in Model.Transactions)
+                {
+                    <tr>
+                        <td>
+                            @if (@transaction.StatusId == 1)
+                            {
+                                <span class="text-green">Success</span>
+                            }
+                            else
+                            {
+                                <span class="text-red">Abandoned</span>
+                            }
+                        </td>
+                        <td class="auto-format-date">@transaction.Date.ToString("O")</td>
+                        <td class="word-break-all">@transaction.Description</td>
+                        <td>@transaction.FromAccount.Name</td>
+                        <td>@transaction.Destination</td>
+                        <td>
+                            @if (!transaction.Income)
+                            {
+                                <span class="text-red">@transaction.Amount BYN</span>
+                            }
+                            else
+                            {
+                                <span class="text-green">+@transaction.Amount BYN</span>}
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <!--
+            <partial name="_PaginationPartial" model="@Model.Transactions" />
+            -->}
+    </div>
+    <div class="tab-pane" id="cards">
+        <div id="accordion" class="mt-2">
+            @foreach (var card in Model.Account.Cards.Select((value, i) => new { i, value }))
+            {
+                <div class="card">
+                    <div class="card-header" id="heading_@card.i">
+                        <h5 class="mb-0">
+                            <button class="btn" data-toggle="collapse" data-target="#collapse_@card.i" aria-expanded="true" aria-controls="collapse_@card.i">
+                                @card.value.Name <span>************@card.value.Last4Digits</span>
+                                <i class="fas fa-pen fa-xs cursor-pointer hover-visible text-muted text-primary-hover"
+                                   data-toggle="modal" data-target="#editModalCard" onclick="showModalEditCard('@card.value.Name', '@card.value.Id')">
+                                </i>
+                            </button>
+                        </h5>
+                    </div>
+
+                    <div id="collapse_@card.i" class="collapse" aria-labelledby="heading_@card.i" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row action-row">
+                                <div class="col-sm-3 col-xs-6 block-label">
+                                    <div class="label-text">Status</div>
+                                </div>
+                                @if (card.value.StatusId == 1)
+                                {
+                                    <div class="col-sm-7 col-xs-12 block-content">
+                                        <span class="status-indicator">@card.value.Status.Name</span>
+                                    </div>
+                                    <div class="col-sm-2 col-xs-6 block-buttons text-right">
+                                        <span class="btn" onclick="showModal(@card.value.StatusId, '@card.value.Id')" data-toggle="modal" data-target="#editModalCardBlock">Block</span>
+                                    </div>
+                                }
+                                else if (card.value.StatusId == 2)
+                                {
+                                    <div class="col-sm-9 col-xs-12 block-content">
+                                        <span class="status-indicator-red">@card.value.Status.Name</span>
+                                    </div>
+                                }
+                                else if (card.value.StatusId == 3)
+                                {
+                                    <div class="col-sm-9 col-xs-12 block-content">
+                                        <span class="status-indicator-yellow">@card.value.Status.Name</span>
+                                    </div>
+                                }
+                                else if (card.value.StatusId == 4)
+                                {
+                                    <div class="col-sm-7 col-xs-12 block-content">
+                                        <span class="status-indicator-red">@card.value.Status.Name</span>
+                                    </div>
+                                    <div class="col-sm-2 col-xs-6 block-buttons text-right">
+                                        <span class="btn" onclick="showModal(@card.value.StatusId, '@card.value.Id')" data-toggle="modal" data-target="#editModalCardActivate">Activate</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-sm-7 col-xs-12 block-content">
+                                        <span class="status-indicator-yellow">@card.value.Status.Name</span>
+                                    </div>
+                                    <div class="col-sm-2 col-xs-6 block-buttons text-right">
+                                        <span class="btn" onclick="showModal(@card.value.StatusId, '@card.value.Id')" data-toggle="modal" data-target="#editModalCardActivate">Activate</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="label-text">Pin-Code</div>
+                                </div>
+                                <div class="col-sm-9 block-buttons text-right">
+                                    <span class="btn" onclick="showChangePinCodeModal('@card.value.Id')" data-toggle="modal" data-target="#changePinCodeModalCard">Сhange</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="label-text">Owner</div>
+                                </div>
+                                <div class="col-sm-9 cms-html-block ql-editor">
+                                    <span class="">@card.value.CardHolderName</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="label-text">Expiry date</div>
+                                </div>
+                                <div class="col-sm-9 cms-html-block ql-editor">
+                                    <span class="">@card.value.ExpireTime.ToString("MM")/@card.value.ExpireTime.ToString("yy")</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="label-text">Currency</div>
+                                </div>
+                                <div class="col-sm-9 cms-html-block ql-editor">
+                                    <span class="">@Model.Account.Currency.Code</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="card">
+                <div class="card-header" id="headingPlus">
+                    <h5 class="mb-0">
+                        <button class="btn text-green" data-toggle="collapse" data-target="#collapsePlus" aria-expanded="true" aria-controls="collapsePlus">
+                            Add New Card
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapsePlus" class="collapse" aria-labelledby="headingPlus" data-parent="#accordion">
+                    <div class="card-body">
+                        <form method="post">
+                            <input type="hidden" name="accountId" value="@Model.Account.Id">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input class="form-control" type="text" name="name">
+                            </div>
+                            <div class="form-group">
+                                <label>Card holder name</label>
+                                <input required class="form-control" type="text" name="cardHolderName">
+                            </div>
+                            <div class="text-center d-flex justify-content-between">
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane" id="actions">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card card-sub" style="cursor: pointer">
+                    <div class="card-block">
+                        <h4 class="card-title">Diactivate card?</h4>
+                        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#ModalDeactivateCard">Diactivate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit account display name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input required class="form-control" type="text" name="name">
+                    </div>
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModalCardBlock" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Do yuu really want to block this card?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <input type="hidden" name="cardId" value="">
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModalCardActivate" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">To unblock the card enter the number and cvv</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <input type="hidden" name="cardId" value="">
+                    <div class="form-group">
+                        <label>Number</label>
+                        <input required class="form-control" type="text" name="number">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input required class="form-control" type="text" name="cvv">
+                    </div>
+                    <div class="form-group">
+                        <label>Pin-Code</label>
+                        <input required class="form-control" type="text" name="pinCode">
+                    </div>
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ModalDeactivateCard" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter the code that was sent to your phone number</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <div class="form-group">
+                        <label>Code</label>
+                        <input required class="form-control" type="text" name="code">
+                    </div>
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModalCard" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit card display name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <input type="hidden" name="cardId" value="">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input required class="form-control" type="text" name="name">
+                    </div>
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="changePinCodeModalCard" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">A new PIN-code will be sent to your mobile phone number. The old PIN will then be invalidated. Proceed?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post">
+                    <input type="hidden" name="accountId" value="@Model.Account.Id">
+                    <input type="hidden" name="cardId" value="">
+                    <div class="text-center d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">OK</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $('#editModal').on('show.bs.modal',
+            function() {
+                let modal = $(this);
+                let name = $('#accountName').text();
+
+                modal.find('.modal-body input[name=name]').val(name);
+            });
+
+        $('#editModal').on('shown.bs.modal',
+            function() {
+                $(this).find('.modal-body input[name=name]').trigger('focus');
+            });
+
+        $('#editModal form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("ChangeAccountName", "Account")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#editModal').modal('hide');
+            }).done(function(response) {
+                if (!response.success) {
+                    return;
+                }
+
+                let newName = $('#editModal input[name=name]').val();
+
+                $('#accountName').text(newName);
+            });
+        });
+
+        $('#collapsePlus form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("AddCard", "Account")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).done(function(response) {
+                if (!response.success) {
+                    return;
+                }
+
+                document.location.reload();
+            });
+        });
+
+        function showModal(status, id) {
+            if (status === 1) {
+                let modal = $('#editModalCardBlock');
+
+                modal.find('.modal-body input[name=cardId]').val(id);
+
+                $('#editModalCardBlock').show();
+            } else {
+                let modal = $('#editModalCardActivate');
+
+                modal.find('.modal-body input[name=cardId]').val(id);
+
+                $('#editModalCardActivate').show();
+            }
+        }
+
+        $('#editModalCardBlock form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("BlockCard", "Card")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#editModal').modal('hide');
+            }).done(function(response) {
+                if (!response.success) {
+                    return;
+                }
+
+                document.location.reload();
+            });
+        });
+
+        $('#editModalCardActivate form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("UnblockCard", "Card")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#editModal').modal('hide');
+            }).done(function(response) {
+                if (!response.success) {
+                    return;
+                }
+
+                document.location.reload();
+            });
+        });
+
+        $('#ModalDeactivateCard').on('show.bs.modal',
+            function () {
+                $.ajax({
+                    url: '@Url.Action("DeactivateAccount", "Account")?accountId=@Model.Account.Id',
+                    type: 'get',
+                }).done(function (response) {
+                    if (!response.success) {
+                        document.location.reload();
+                    }
+
+                    return;
+                });
+            });
+
+        $('#ModalDeactivateCard form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("DeactivateAccount", "Account")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#ModalDeactivateCard').modal('hide');
+            }).done(function(response) {
+                if (!response.success) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("Index", "Home")',
+                    type: 'get',
+                });
+            });
+        });
+
+        function showModalEditCard(name, id) {
+            let modal = $('#editModalCard');
+
+            modal.find('.modal-body input[name=cardId]').val(id);
+            modal.find('.modal-body input[name=name]').val(name);
+
+            $('#editModalCard').show();
+        }
+
+        $('#editModalCard form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("ChangeCardName", "Card")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#editModal').modal('hide');
+            }).done(function(response) {
+                document.location.reload();
+            });
+        });
+
+        function showChangePinCodeModal(id) {
+            let modal = $('#changePinCodeModalCard');
+
+            modal.find('.modal-body input[name=cardId]').val(id);
+
+            $('#changePinCodeModalCard').show();
+        }
+
+        $('#changePinCodeModalCard form').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '@Url.Action("ChangePinCode", "Card")',
+                type: 'post',
+                data: $(event.target).serialize()
+
+            }).always(function() {
+                $('#changePinCodeModalCard').modal('hide');
+            }).done(function (response) {
+                if (!response.success) {
+                    return;
+                }
+
+                document.location.reload();
+            });
+        });
+    </script>
+}
