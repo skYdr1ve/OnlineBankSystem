@@ -2,13 +2,9 @@
 using Microsoft.Extensions.Logging;
 using OnlineBankSystem.Web.Models;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using OnlineBankSystem.Core.Entities;
 using OnlineBankSystem.Services.Interfaces;
 
 namespace OnlineBankSystem.Web.Controllers
@@ -35,16 +31,6 @@ namespace OnlineBankSystem.Web.Controllers
             }
 
             var userId = GetCurrentUserId();
-
-            /*var bankAccounts =
-                (await this.bankAccountService.GetAllAccountsByUserIdAsync<BankAccountIndexServiceModel>(userId))
-                .Select(this.mapper.Map<BankAccountIndexViewModel>)
-                .ToArray();
-            var moneyTransfers = (await this.moneyTransferService
-                    .GetLast10MoneyTransfersForUserAsync<MoneyTransferListingServiceModel>(userId))
-                .Select(this.mapper.Map<MoneyTransferListingDto>)
-                .ToArray();
-            */
 
             var accounts = await _accountService.GetAccountsAsync(Guid.Parse(userId));
             var transactions = await _transactionService.GetLast10TransactionsAsync(Guid.Parse(userId));
