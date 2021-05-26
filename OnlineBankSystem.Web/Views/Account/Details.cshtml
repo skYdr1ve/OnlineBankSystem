@@ -40,7 +40,6 @@
 <ul class="nav nav-tabs justify-content-center" data-tabs="tabs">
     <li class="nav-item active"><a class="nav-link" data-toggle="tab" href="#transactions">Transactions</a></li>
     <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#cards">Cards</a></li>
-    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#actions">Actions</a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane active" id="transactions">
@@ -82,11 +81,11 @@
                         <td>
                             @if (!transaction.Income)
                             {
-                                <span class="text-red">@transaction.Amount BYN</span>
+                                <span class="text-red">@transaction.Amount @transaction.FromCurrency</span>
                             }
                             else
                             {
-                                <span class="text-green">+@transaction.Amount BYN</span>}
+                                <span class="text-green">+@transaction.Amount @transaction.ToCurrency</span>}
                         </td>
                     </tr>
                 }
@@ -216,22 +215,20 @@
                                 <label>Card holder name</label>
                                 <input required class="form-control" type="text" name="cardHolderName">
                             </div>
+                            <div class="form-group">
+                                <label asp-for="DepartamentId"></label>
+                                <select class="custom-select form-control" asp-for="DepartamentId">
+                                    @foreach (var departament in Model.Departaments)
+                                    {
+                                        <option value="@departament.Id">@departament.Address</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="DepartamentId" class="text-danger"></span>
+                            </div>
                             <div class="text-center d-flex justify-content-between">
                                 <button type="submit" class="btn btn-primary">Add</button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="tab-pane" id="actions">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card card-sub" style="cursor: pointer">
-                    <div class="card-block">
-                        <h4 class="card-title">Diactivate card?</h4>
-                        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#ModalDeactivateCard">Diactivate</button>
                     </div>
                 </div>
             </div>
@@ -312,32 +309,6 @@
                     <div class="form-group">
                         <label>Pin-Code</label>
                         <input required class="form-control" type="text" name="pinCode">
-                    </div>
-                    <div class="text-center d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">OK</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="ModalDeactivateCard" class="modal fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Enter the code that was sent to your phone number</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form method="post">
-                    <input type="hidden" name="accountId" value="@Model.Account.Id">
-                    <div class="form-group">
-                        <label>Code</label>
-                        <input required class="form-control" type="text" name="code">
                     </div>
                     <div class="text-center d-flex justify-content-between">
                         <button type="button" class="btn btn-secondary mr-auto" data-dismiss="modal">Cancel</button>
@@ -583,7 +554,8 @@
                     return;
                 }
 
-                document.location.reload();
+
+                this.windows.location.href = '@Url.Action("Index", "Home")';
             });
         });
     </script>

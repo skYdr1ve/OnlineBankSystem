@@ -15,15 +15,18 @@ namespace OnlineBankSystem.Web.Controllers
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
         private readonly ICountryCurrencyCodeService _countryCurrencyCodeService;
+        private readonly IDepartamentService _departamentService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public AccountController(IAccountService accountService, ITransactionService transactionService, 
-            ICountryCurrencyCodeService countryCurrencyCodeService, UserManager<ApplicationUser> userManager)
+            ICountryCurrencyCodeService countryCurrencyCodeService, IDepartamentService departamentService,
+            UserManager<ApplicationUser> userManager)
         {
             _accountService = accountService;
             _transactionService = transactionService;
             _userManager = userManager;
             _countryCurrencyCodeService = countryCurrencyCodeService;
+            _departamentService = departamentService;
         }
 
         [HttpGet]
@@ -31,7 +34,8 @@ namespace OnlineBankSystem.Web.Controllers
         {
             var model = new AccountEditViewModel
             {
-                Currencies = (List<CountryCurrencyCode>) await _countryCurrencyCodeService.GetCurrenciesAsync()
+                Currencies = (List<CountryCurrencyCode>) await _countryCurrencyCodeService.GetCurrenciesAsync(),
+                Departaments = (List<Departament>) await _departamentService.GetDepartamentsAsync()
             };
 
             return View(model);
@@ -90,7 +94,8 @@ namespace OnlineBankSystem.Web.Controllers
             {
                 Account = account,
                 MoneyTransfersCount = transactions.Count,
-                Transactions = transactions
+                Transactions = transactions,
+                Departaments = (List<Departament>)await _departamentService.GetDepartamentsAsync()
             };
 
             return View(model);
@@ -158,11 +163,6 @@ namespace OnlineBankSystem.Web.Controllers
 
             var isSuccessful = await _accountService.DeactivateAccountAsync(accountId, user.PhoneNumber);
 
-            if (isSuccessful)
-            {
-                RedirectToHome();
-            }
-
             return Ok(new
             {
                 success = isSuccessful
@@ -199,7 +199,7 @@ namespace OnlineBankSystem.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCard(Guid accountId, string name, string cardHolderName)
+        public async Task<IActionResult> AddCard(Guid accountId, string name, string cardHolderName, Guid departamentId)
         {
             if (name == null)
             {

@@ -7,6 +7,14 @@
     <form method="post" asp-action="CreateGlobal" asp-controller="Transaction">
         <hr class="w-75" />
         <div class="form-group">
+            <label asp-for="PaymentTypeId"></label>
+            <select id="PaymentType" class="custom-select form-control" asp-for="PaymentTypeId">
+                <option selected value="1">Account Number</option>
+                <option value="2">Credit Card</option>
+            </select>
+            <span asp-validation-for="PaymentTypeId" class="text-danger"></span>
+        </div>
+        <div class="form-group">
             <label asp-for="AccountId"></label>
             <select class="custom-select form-control" asp-for="AccountId">
                 <option disabled selected>Select source account...</option>
@@ -18,7 +26,7 @@
             <span asp-validation-for="AccountId" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label asp-for="ToAccountNumber"></label>
+            <label id="PaymentTypeLabel" asp-for="ToAccountNumber"></label>
             <input class="form-control" asp-for="ToAccountNumber" id="destination" />
             <span asp-validation-for="ToAccountNumber" class="text-danger"></span>
         </div>
@@ -48,13 +56,26 @@
 {
     @if (Model.Accounts.Count() > 1)
     {
-<script>
-    $('#ownAccountPicker').change(function () {
-        $('#destination').val(this.value);
-    });
+        <script>
+            $('#ownAccountPicker').change(function() {
+                $('#destination').val(this.value);
+            });
 
-    $('#destination').change(function () {
-        $("#ownAccountPicker")[0].selectedIndex = 0;
-    });</script>
-}
+            $('#destination').change(function() {
+                $("#ownAccountPicker")[0].selectedIndex = 0;
+            });
+
+            $('#ownAccountPicker').change(function() {
+                $('#destination').val(this.value);
+            });
+
+            $('#PaymentType').change(function () {
+                if (parseInt($(this).val()) === 1) {
+                    $("#PaymentTypeLabel").text("Destination Account");
+                } else {
+                    $("#PaymentTypeLabel").text("Destination Credit Card");
+                }
+            });
+        </script>
+    }
 }

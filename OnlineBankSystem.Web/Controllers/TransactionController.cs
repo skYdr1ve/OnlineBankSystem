@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using OnlineBankSystem.Core.Entities;
 using OnlineBankSystem.Services.Interfaces;
+using OnlineBankSystem.Services.Models;
 using OnlineBankSystem.Web.Models;
 
 namespace OnlineBankSystem.Web.Controllers
@@ -13,12 +15,17 @@ namespace OnlineBankSystem.Web.Controllers
         private readonly IAccountService _accountService;
         private readonly ICurrencyService _currencyService;
         private readonly ITransactionService _transactionService;
+        private readonly ICryptoHelper _cryptoHelper;
+        private readonly ICardHelper _cardHelper;
 
-        public TransactionController(IAccountService accountService, ICurrencyService currencyService, ITransactionService transactionService)
+        public TransactionController(IAccountService accountService, ICurrencyService currencyService, ITransactionService transactionService,
+            ICryptoHelper cryptoHelper, ICardHelper cardHelper)
         {
             _accountService = accountService;
             _currencyService = currencyService;
             _transactionService = transactionService;
+            _cryptoHelper = cryptoHelper;
+            _cardHelper = cardHelper;
         }
 
         public async Task<IActionResult> Index()
@@ -90,13 +97,32 @@ namespace OnlineBankSystem.Web.Controllers
             model.ToAccountNumber = model.ToAccountNumber.ToUpperInvariant();
 
             var fromAccount = await _accountService.GetAccountAsync(model.AccountId.Value, true);
-            var toAccount = await _accountService.GetAccountByNumberAsync(model.ToAccountNumber, true);
+
+            Account toAccount = null;
+
+            if (model.PaymentTypeId == 1)
+            {
+                toAccount = await _accountService.GetAccountByNumberAsync(model.ToAccountNumber, true);
+            }
+            else
+            {
+                if (!_cardHelper.CheckLuhn(model.ToAccountNumber))
+                {
+                    ModelState.AddModelError("ToAccountNumber", "This credit card is not valid");
+                    model.Accounts =
+                        (List<Account>)await _accountService.GetAccountsAsync(
+                            Guid.Parse(GetCurrentUserId()));
+                    return View(model);
+                }
+
+                toAccount = await _accountService.GetAccountByCardNumberAsync(_cryptoHelper.Hash(model.ToAccountNumber), true);
+            }
 
             if (toAccount == null)
             {
-                ModelState.AddModelError("ToAccountNumber", "This account does not exist");
+                ModelState.AddModelError("ToAccountNumber", model.PaymentTypeId == 1 ? "This account does not exist" : "This credit card does not exist");
                 model.Accounts =
-                    (List<Core.Entities.Account>)await _accountService.GetAccountsAsync(
+                    (List<Account>)await _accountService.GetAccountsAsync(
                         Guid.Parse(GetCurrentUserId()));
                 return View(model);
             }

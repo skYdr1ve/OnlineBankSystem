@@ -18,18 +18,14 @@ namespace OnlineBankSystem.Services.Services
             _config = options.Value;
         }
 
-        public Task SendAsync(string destination, string message)
+        public async Task<MessageResource> SendAsync(string destination, string message)
         {
             TwilioClient.Init(_config.AccountSid, _config.AuthToken);
 
-            var result = MessageResource.Create(
+            return await MessageResource.CreateAsync(
                 new PhoneNumber(destination),
                 from: new PhoneNumber(_config.FromNumber),
                 body: message);
-
-            Trace.TraceInformation(result.Status.ToString());
-
-            return Task.FromResult(0);
         }
     }
 }

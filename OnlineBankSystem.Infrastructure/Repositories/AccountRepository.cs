@@ -65,7 +65,16 @@ namespace OnlineBankSystem.Infrastructure.Repositories
                 (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 query = query.Include(includeProperty);
 
-            return await query.SingleOrDefaultAsync(x => x.Cards.Exists(x => x.Number == number));
+            Expression<Func<Account, bool>> isValid = account => account.Cards.Exists(c => c.Number == number);
+
+            return await query.FirstOrDefaultAsync(isValid);
+        }
+
+        public async Task<List<string>> ListAccountsNumbers()
+        {
+            var query = DbSet.AsQueryable().AsNoTracking();
+
+            return await query.Select(x => x.Number).ToListAsync();
         }
     }
 }

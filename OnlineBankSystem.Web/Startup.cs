@@ -87,6 +87,7 @@ namespace OnlineBankSystem.Web
             services.AddScoped<IAccountStatusRepository, AccountStatusRepository>();
             services.AddScoped<ICardStatusRepository, CardStatusRepository>();
             services.AddScoped<ICountryCurrencyCodeRepository, CountryCurrencyCodeRepository>();
+            services.AddScoped<IDepartamentRepository, DepartamentRepository>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ICountryCurrencyCodeService, CountryCurrencyCodeService>();
@@ -94,6 +95,7 @@ namespace OnlineBankSystem.Web
             services.AddScoped<ICardStatusService, CardStatusService>();
             services.AddScoped<ICardService, CardService>();
             services.AddScoped<ICurrencyService, CurrencyService>();
+            services.AddScoped<IDepartamentService, DepartamentService>();
 
             services.AddRazorPages();
             services.AddControllersWithViews();

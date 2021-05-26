@@ -48,9 +48,22 @@ namespace OnlineBankSystem.Services.Services
 
         public async Task CreateAccountAsync(Account account, string name, string phoneNumber, string cardName)
         {
-            account.Number = _accountHelper.GenerateIban();
+            var accounts = await _accountRepository.ListAccountsNumbers();
+            var number = _accountHelper.GenerateIban();
+            while (accounts.Contains(number))
+            {
+                number = _accountHelper.GenerateIban();
+            }
 
+            account.Number = number;
+
+            var cards = await _cardRepository.ListCardsNumber();
             var cardNumber = _cardHelper.Generate16DigitNumber();
+            while (cards.Contains(_cryptoHelper.Hash(cardNumber)))
+            {
+                cardNumber = _cardHelper.Generate16DigitNumber();
+            }
+
             var securityCode = _cardHelper.Generate3DigitSecurityCode();
             var pinCode = _cardHelper.GeneratePinCode();
 
@@ -94,7 +107,13 @@ namespace OnlineBankSystem.Services.Services
 
         public async Task<bool> AddCardAsync(Account account, string name, string cardHolderName, string phoneNumber)
         {
+            var cards = await _cardRepository.ListCardsNumber();
             var cardNumber = _cardHelper.Generate16DigitNumber();
+            while (cards.Contains(_cryptoHelper.Hash(cardNumber)))
+            {
+                cardNumber = _cardHelper.Generate16DigitNumber();
+            }
+
             var securityCode = _cardHelper.Generate3DigitSecurityCode();
             var pinCode = _cardHelper.GeneratePinCode();
 
@@ -142,7 +161,7 @@ namespace OnlineBankSystem.Services.Services
 
         public async Task<bool> DeactivateAccountAsync(Guid accountId, string phoneNumber)
         {
-            var account = await _accountRepository.Find(accountId, track: true);
+            var account = await _accountRepository.Find(accountId, track: true, includeProperties: "Cards");
 
             if (account == null)
             {
@@ -178,7 +197,8 @@ namespace OnlineBankSystem.Services.Services
 
         public async Task<Account> GetAccountByCardNumberAsync(string number, bool track = false)
         {
-            return await _accountRepository.FindByCardNumber(number, "Cards,Cards.Status,Currency,Status", track);
+            var card = await _cardRepository.FindByCardNumber(number);
+            return await _accountRepository.Find(card.AccountId, "Cards,Cards.Status,Currency,Status", track);
         }
     }
 }

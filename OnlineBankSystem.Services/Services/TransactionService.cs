@@ -67,7 +67,7 @@ namespace OnlineBankSystem.Services.Services
                             FromAccountId = fromAccount.Id,
                             ToAccountId = toAccount.Id,
                             ExchangeRate = exchangeRate,
-                            Amount = amount,
+                            Amount = amount * exchangeRate,
                             CardId = null,
                             Date = DateTime.Now,
                             Description = description,
@@ -78,7 +78,7 @@ namespace OnlineBankSystem.Services.Services
                             Destination = toAccount.Number
                         };
 
-                        toAccount.Balance += amount;
+                        toAccount.Balance += amount * exchangeRate;
                         await _transactionRepository.Add(incomeTransfer);
 
                         await _accountRepository.Update();

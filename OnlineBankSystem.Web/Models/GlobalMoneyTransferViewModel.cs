@@ -24,6 +24,9 @@ namespace OnlineBankSystem.Web.Models
         [MaxLength(150)]
         public string Description { get; set; }
 
+        [Display(Name = "Payment Type")]
+        public int PaymentTypeId { get; set; }
+
         public List<Account> Accounts { get; set; }
     }
 }

@@ -18,6 +18,7 @@ namespace OnlineBankSystem.Infrastructure
         public DbSet<AccountStatus> AccountStatuses { get; set; }
         public DbSet<CardStatus> CardStatuses { get; set; }
         public DbSet<TransactionStatus> TransactionStatuses { get; set; }
+        public DbSet<Departament> Departament { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -35,6 +36,7 @@ namespace OnlineBankSystem.Infrastructure
             builder.ApplyConfiguration(new AccountStatusConfiguration());
             builder.ApplyConfiguration(new CardStatusConfiguration());
             builder.ApplyConfiguration(new TransactionStatusConfiguration());
+            builder.ApplyConfiguration(new DepartamentConfiguration());
         }
     }
 }

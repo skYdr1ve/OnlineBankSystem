@@ -93,11 +93,11 @@
                             <td>
                                 @if (!transaction.Income)
                                 {
-                                    <span class="text-red">@transaction.Amount BYN</span>
+                                    <span class="text-red">@transaction.Amount @transaction.FromCurrency</span>
                                 }
                                 else
                                 {
-                                    <span class="text-green">+@transaction.Amount BYN</span>
+                                    <span class="text-green">+@transaction.Amount @transaction.ToCurrency</span>
                                 }
                             </td>
                         </tr>
